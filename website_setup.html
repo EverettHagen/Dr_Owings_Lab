@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cmeg Bacterial Database</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ebced1;
+        }
+
+        .title {
+            color: white; /* fill color */
+            -webkit-text-stroke: 2px #c76554; 
+            font-size: 48px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Style the tab */
+        .tab {
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
+            /*background-color: #c76554;*/
+            background-color: #bcc170;
+        }
+
+        /* Style the buttons inside the tab */
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 20px;
+            transition: 0.3s;
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        /* Create an active/current tablink class */
+        .tab button.active {
+            background-color: #ccc;
+        }
+
+        /* Style the tab content */
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<h2 class="title">cmeg Bacterial Database</h2>
+
+
+
+
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'Home')" id="defaultOpen">Home</button>
+  <button class="tablinks" onclick="openTab(event, 'About')">About</button>
+  <button class="tablinks" onclick="openTab(event, 'Contact')">Contact</button>
+</div>
+
+<div id="Home" class="tabcontent">
+  <h3>Home</h3>
+  
+  <!-- CSV search inputs -->
+  <input type="file" id="csvFileInput" accept=".csv">
+  <input type="text" id="searchBox" placeholder="Enter OTU or Full_Name">
+  <button onclick="searchCSV()">Search</button>
+  
+  <div id="results"></div>
+</div>
+
+<div id="About" class="tabcontent">
+  <h3>About</h3>
+  <p>This database is provided using a python code which can be found at the github:
+        <a href="https://github.com/EverettHagen/Dr_Owings_Lab" target="_blank">here</a>
+  </p>
+
+</div>
+
+<div id="Contact" class="tabcontent">
+  <h3>Contact</h3>
+  <p>Get in touch with Dr. XYZ at example@example.com, or me at ex@eample.com</p>
+</div>
+
+<script>
+function openTab(evt, tabName) {
+    // Hide all tab content
+    const tabcontent = document.getElementsByClassName("tabcontent");
+    for (let i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Remove "active" class from all buttons
+    const tablinks = document.getElementsByClassName("tablinks");
+    for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab and add "active" class to its button
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+// Open default tab
+document.getElementById("defaultOpen").click();
+</script>
+
+</body>
+</html>
+
+
+<script>
+  let data = [];
+
+  document.getElementById('csvFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const csvText = event.target.result;
+      data = parseCSV(csvText);
+      alert('CSV loaded successfully!');
+    };
+    reader.readAsText(file);
+  });
+
+  function parseCSV(csv) {
+    const rows = csv.trim().split('\n').map(r => r.split(','));
+    const headers = rows[0];
+    return rows.slice(1).map(row => {
+      let obj = {};
+      headers.forEach((h, i) => obj[h] = row[i] || "");
+      return obj;
+    });
+  }
+
+  function searchCSV() {
+    const query = document.getElementById("searchBox").value.trim().toLowerCase();
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "";
+
+    if (!query) {
+      resultsDiv.innerHTML = "<p>Please enter a search term.</p>";
+      return;
+    }
+
+    const matches = data.filter(row =>
+      row["OTU"].toLowerCase() === query ||
+      row["Full_Name"].toLowerCase() === query
+    );
+
+    if (matches.length === 0) {
+      resultsDiv.innerHTML = "<p>No match found.</p>";
+      return;
+    }
+
+    // Create table
+    const headers = Object.keys(data[0]);
+    let table = "<table border='1' cellpadding='5' cellspacing='0'><tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+    matches.forEach(row => {
+      table += "<tr>" + headers.map(h => `<td>${row[h]}</td>`).join("") + "</tr>";
+    });
+    table += "</table>";
+    resultsDiv.innerHTML = table;
+  }
+</script>
