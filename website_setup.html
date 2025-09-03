@@ -178,15 +178,45 @@ Otu136556,Bacteria,Proteobacteria,Gammaproteobacteria,Enterobacterales,Aeromonad
     reader.readAsText(file);
   });
 
-  function parseCSV(csv) {
-    const rows = csv.trim().split('\n').map(r => r.split(','));
-    const headers = rows[0];
-    return rows.slice(1).map(row => {
-      let obj = {};
-      headers.forEach((h, i) => obj[h] = row[i] || "");
-      return obj;
+function parseCSV(csv) {
+  // Split into rows
+  const rows = csv.trim().split('\n').map(line => {
+    let fields = [];
+    let field = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        // Handle double quotes inside quoted field
+        if (inQuotes && line[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        fields.push(field);
+        field = '';
+      } else {
+        field += char;
+      }
+    }
+    fields.push(field); // last one
+    return fields;
+  });
+
+  // First row = headers
+  const headers = rows[0];
+  return rows.slice(1).map(row => {
+    let obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i] !== undefined ? row[i] : "";
     });
-  }
+    return obj;
+  });
+}
+
 
   function searchCSV() {
   const query = document.getElementById("searchBox").value.trim().toLowerCase();
