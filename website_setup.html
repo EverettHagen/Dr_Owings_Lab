@@ -46,7 +46,7 @@
 
         /* Create an active/current tablink class */
         .tab button.active {
-            background-color: #ccc;
+            background-color: #777A41;
         }
 
         /* Style the tab content */
@@ -67,17 +67,16 @@
 
 
 <div class="tab">
-  <button class="tablinks" onclick="openTab(event, 'Home')" id="defaultOpen">Home</button>
+  <button class="tablinks" onclick="openTab(event, 'OTU Search')" id="defaultOpen">OTU Search</button>
   <button class="tablinks" onclick="openTab(event, 'About')">About</button>
   <button class="tablinks" onclick="openTab(event, 'Contact')">Contact</button>
 </div>
 
-<div id="Home" class="tabcontent">
-  <h3>Home</h3>
+<div id="OTU Search" class="tabcontent">
+  <h3>OTU Search</h3>
   
   <!-- CSV search inputs -->
-  <input type="file" id="csvFileInput" accept=".csv">
-  <input type="text" id="searchBox" placeholder="Enter OTU or Full_Name">
+  <input type="text" id="searchBox" placeholder="Enter OTU">
   <button onclick="searchCSV()">Search</button>
   
   <div id="results"></div>
@@ -122,9 +121,53 @@ document.getElementById("defaultOpen").click();
 </body>
 </html>
 
-
 <script>
-  let data = [];
+  let csvText = `
+OTU,Kingdom,Phylum,Class,Order,Family,Genus,Pathogenic Species/Strains in Genus?,Culturable?,Environmental Associations,Genus Contains Antimicrobial Resistant Strains?,Associated with Food-borne Illness?,Disease Associations,Plant Pathogen?,Endosymbiont?,Other Notes,Sources,Pathogenic Species,Antimicrobial Resistant Species,Culturable Species,Plant Pathogenic Species,Endosymbiont Species,Environmental Sources,Human Disease Impact,Pathogenic?,Antimicrobial Resistant?,Plant Pathogen Species,Full_Name
+Otu000581,Bacteria,Bdellovibrionota,Oligoflexia,0319-6G20,0319-6G20_fa,0319-6G20_ge,No,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,Unknown,,,,,Bacteria Bdellovibrionota Oligoflexia 0319-6G20 0319-6G20_fa 0319-6G20_ge
+Otu001358,Bacteria,Acidobacteriota,Blastocatellia,2023-11-24 00:00:00,11-24_fa,11-24_ge,No,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, marine, plant rhizosphere, animal host","pneumonia, general infection",,,,Bacteria Acidobacteriota Blastocatellia 2023-11-24 00:00:00 11-24_fa 11-24_ge
+Otu003953,Bacteria,Proteobacteria,Alphaproteobacteria,Rhizobiales,Beijerinckiaceae,1174-901-12,No,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, plant rhizosphere, human gut",general infection,,,,Bacteria Proteobacteria Alphaproteobacteria Rhizobiales Beijerinckiaceae 1174-901-12
+Otu016921,Bacteria,Bacteroidota,Bacteroidia,Chitinophagales,37-13,37-13_ge,unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,soil,general infection,,,,Bacteria Bacteroidota Bacteroidia Chitinophagales 37-13 37-13_ge
+Otu118871,Bacteria,Actinobacteriota,Thermoleophilia,Solirubrobacterales,67-14,67-14_ge,No,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, marine",,,,,Bacteria Actinobacteriota Thermoleophilia Solirubrobacterales 67-14 67-14_ge
+Otu136851,Bacteria,Chloroflexi,Anaerolineae,SBR1031,A4b,A4b_ge,No,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, marine","pneumonia, general infection",,,,Bacteria Chloroflexi Anaerolineae SBR1031 A4b A4b_ge
+Otu173283,Bacteria,Patescibacteria,Gracilibacteria,Absconditabacteriales_(SR1),Absconditabacteriales_(SR1)_fa,Absconditabacteriales_(SR1)_ge,Yes,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"human gut, animal host","pneumonia, general infection",,,,Bacteria Patescibacteria Gracilibacteria Absconditabacteriales_(SR1) Absconditabacteriales_(SR1)_fa Absconditabacteriales_(SR1)_ge
+Otu003848,Bacteria,Proteobacteria,Alphaproteobacteria,Acetobacterales,Acetobacteraceae,Acetobacter,Yes,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,,"Acetobacter and, Acetobacter pasteurianus, Acetobacter rhizospherensis, Acetobacter sp","Acetobacter aceti, Acetobacter is, Acetobacter species, Acetobacter tropicalis","Acetobacter and, Acetobacter pasteurianus, Acetobacter xylinum",,"Acetobacter pomorum, Acetobacter thailandicus, Acetobacter tropicalis, Acetobacter was",human gut,general infection,Yes,Yes,"Acetobacter and, Acetobacter in",Bacteria Proteobacteria Alphaproteobacteria Acetobacterales Acetobacteraceae Acetobacter
+Otu000183,Bacteria,Proteobacteria,Alphaproteobacteria,Acetobacterales,Acetobacteraceae,Acetobacteraceae_unclassified,Yes,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, plant rhizosphere, human gut, animal host",,,,,Bacteria Proteobacteria Alphaproteobacteria Acetobacterales Acetobacteraceae Acetobacteraceae_unclassified
+Otu000257,Bacteria,Proteobacteria,Alphaproteobacteria,Acetobacterales,Acetobacterales_unclassified,Acetobacterales_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,Unknown,,,,,Bacteria Proteobacteria Alphaproteobacteria Acetobacterales Acetobacterales_unclassified Acetobacterales_unclassified
+Otu000383,Bacteria,Bacteroidota,Bacteroidia,Bacteroidales,Williamwhitmaniaceae,Acetobacteroides,No,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Unknown,,,Acetobacteroides genera,,Acetobacteroides as,,,"freshwater, human gut, animal host",,Yes,,Acetobacteroides genera,Bacteria Bacteroidota Bacteroidia Bacteroidales Williamwhitmaniaceae Acetobacteroides
+Otu000361,Bacteria,Firmicutes,Bacilli,Acholeplasmatales,Acholeplasmataceae,Acholeplasma,Yes,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Unknown,,,"Acholeplasma as, Acholeplasma laidlawii, Acholeplasma once, Acholeplasma presented",Acholeplasma laidlawii,Acholeplasma laidlawii,,,"soil, human gut, animal host",general infection,Yes,Yes,"Acholeplasma as, Acholeplasma can, Acholeplasma laidlawii, Acholeplasma once, Acholeplasma presented, Acholeplasma sp",Bacteria Firmicutes Bacilli Acholeplasmatales Acholeplasmataceae Acholeplasma
+Otu000425,Bacteria,Firmicutes,Bacilli,Acholeplasmatales,Acholeplasmataceae,Acholeplasmataceae_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,animal host,general infection,,,,Bacteria Firmicutes Bacilli Acholeplasmatales Acholeplasmataceae Acholeplasmataceae_unclassified
+Otu001083,Bacteria,Firmicutes,Negativicutes,Acidaminococcales,Acidaminococcaceae,Acidaminococcaceae_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"human gut, animal host","diarrhea, general infection",,,,Bacteria Firmicutes Negativicutes Acidaminococcales Acidaminococcaceae Acidaminococcaceae_unclassified
+Otu001538,Bacteria,Firmicutes,Negativicutes,Acidaminococcales,Acidaminococcaceae,Acidaminococcus,No,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Unknown,,,"Acidaminococcus and, Acidaminococcus genera, Acidaminococcus genus, Acidaminococcus massiliensis, Acidaminococcus sp, Acidaminococcus were","Acidaminococcus and, Acidaminococcus fermentans, Acidaminococcus genus, Acidaminococcus intestini, Acidaminococcus sp, Acidaminococcus strains","Acidaminococcus fermentans, Acidaminococcus homini, Acidaminococcus hominis, Acidaminococcus sp, Acidaminococcus was",,,human gut,general infection,Yes,Yes,"Acidaminococcus and, Acidaminococcus intestini",Bacteria Firmicutes Negativicutes Acidaminococcales Acidaminococcaceae Acidaminococcus
+Otu011506,Bacteria,Actinobacteriota,Acidimicrobiia,Acidimicrobiia_unclassified,Acidimicrobiia_unclassified,Acidimicrobiia_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, freshwater, plant rhizosphere, human gut, animal host",,,,,Bacteria Actinobacteriota Acidimicrobiia Acidimicrobiia_unclassified Acidimicrobiia_unclassified Acidimicrobiia_unclassified
+Otu026140,Bacteria,Proteobacteria,Alphaproteobacteria,Acetobacterales,Acetobacteraceae,Acidiphilium,No,Yes,Unknown,Unknown,Unknown,Unknown,Unknown,Yes,,,"Acidiphilium and, Acidiphilium was","Acidiphilium cryptum, Acidiphilium multivorum, Acidiphilium significantly, Acidiphilium symbioticum","Acidiphilium acidophilum, Acidiphilium cryptum, Acidiphilium sp",,Acidiphilium rubrum,"soil, freshwater, human gut","pneumonia, general infection",Yes,Yes,,Bacteria Proteobacteria Alphaproteobacteria Acetobacterales Acetobacteraceae Acidiphilium
+Otu058345,Bacteria,Proteobacteria,Alphaproteobacteria,Acetobacterales,Acetobacteraceae,Acidisoma,No,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, marine",,,,,Bacteria Proteobacteria Alphaproteobacteria Acetobacterales Acetobacteraceae Acidisoma
+Otu065281,Bacteria,Acidobacteriota,Acidobacteriae,Acidobacteriae_unclassified,Acidobacteriae_unclassified,Acidobacteriae_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,Unknown,,,,,Bacteria Acidobacteriota Acidobacteriae Acidobacteriae_unclassified Acidobacteriae_unclassified Acidobacteriae_unclassified
+Otu069952,Bacteria,Proteobacteria,Gammaproteobacteria,Pseudomonadales,Moraxellaceae,Acinetobacter,Yes,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,,Acinetobacter baumannii,Acinetobacter baumannii,Acinetobacter baumannii,,"Acinetobacter sp, Acinetobacter species","freshwater, human gut, animal host","sepsis, general infection",Yes,Yes,"Acinetobacter baumannii, Acinetobacter calcoaceticus",Bacteria Proteobacteria Gammaproteobacteria Pseudomonadales Moraxellaceae Acinetobacter
+Otu072316,Bacteria,Actinobacteriota,Actinobacteria,Actinobacteria_unclassified,Actinobacteria_unclassified,Actinobacteria_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, freshwater, marine, plant rhizosphere, human gut",general infection,,,,Bacteria Actinobacteriota Actinobacteria Actinobacteria_unclassified Actinobacteria_unclassified Actinobacteria_unclassified
+Otu073016,Bacteria,Actinobacteriota,Actinobacteriota_unclassified,Actinobacteriota_unclassified,Actinobacteriota_unclassified,Actinobacteriota_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"soil, human gut, animal host",,,,,Bacteria Actinobacteriota Actinobacteriota_unclassified Actinobacteriota_unclassified Actinobacteriota_unclassified Actinobacteriota_unclassified
+Otu074440,Bacteria,Actinobacteriota,Actinobacteria,Streptosporangiales,Thermomonosporaceae,Actinomadura,No,Yes,Unknown,Unknown,Unknown,Unknown,Unknown,Yes,,,Actinomadura pelletieri,Actinomadura madurae,"Actinomadura geliboluensis, Actinomadura namibiensis, Actinomadura species",,Actinomadura sp,"soil, freshwater, marine, plant rhizosphere, animal host",,Yes,Yes,,Bacteria Actinobacteriota Actinobacteria Streptosporangiales Thermomonosporaceae Actinomadura
+Otu078253,Bacteria,Actinobacteriota,Actinobacteria,Actinomycetales,Actinomycetaceae,Actinomyces,Yes,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,,"Actinomyces bacteremia, Actinomyces in, Actinomyces lingnae, Actinomyces spp, Actinomyces turicensis","Actinomyces and, Actinomyces europaeus, Actinomyces infections, Actinomyces israelii, Actinomyces lingnae, Actinomyces oris, Actinomyces ruminicola","Actinomyces bacteremia, Actinomyces in, Actinomyces israelii, Actinomyces species, Actinomyces turicensis",,"Actinomyces and, Actinomyces symbionts, Actinomyces was","human gut, animal host",general infection,Yes,Yes,"Actinomyces species, Actinomyces viscosus, Actinomyces was",Bacteria Actinobacteriota Actinobacteria Actinomycetales Actinomycetaceae Actinomyces
+Otu078758,Bacteria,Actinobacteriota,Actinobacteria,Actinomycetales,Actinomycetaceae,Actinomycetaceae_unclassified,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,,"freshwater, human gut","pneumonia, diarrhea, skin infections",,,,Bacteria Actinobacteriota Actinobacteria Actinomycetales Actinomycetaceae Actinomycetaceae_unclassified
+Otu081222,Bacteria,Actinobacteriota,Actinobacteria,Pseudonocardiales,Pseudonocardiaceae,Actinomycetospora,No,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,,Actinomycetospora chiangmaiensis,,"Actinomycetospora chiangmaiensis, Actinomycetospora endophytica",,Actinomycetospora chiangmaiensis,"soil, plant rhizosphere",,Yes,,"Actinomycetospora chibensis, Actinomycetospora chlora, Actinomycetospora lutea, Actinomycetospora rhizophila, Actinomycetospora straminea",Bacteria Actinobacteriota Actinobacteria Pseudonocardiales Pseudonocardiaceae Actinomycetospora
+Otu081421,Bacteria,Proteobacteria,Gammaproteobacteria,Burkholderiales,Alcaligenaceae,Advenella,No,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Unknown,,,"Advenella incenata, Advenella mimigardefordensis, Advenella sp",Advenella mimigardefordensis,"Advenella mimigardefordensis, Advenella sp, Advenella were",,,"soil, animal host",general infection,Yes,Yes,Advenella sp,Bacteria Proteobacteria Gammaproteobacteria Burkholderiales Alcaligenaceae Advenella
+Otu083804,Bacteria,Firmicutes,Bacilli,Lactobacillales,Aerococcaceae,Aerococcus,Yes,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,,"Aerococcus urinae, Aerococcus urinaeequi, Aerococcus viridans","Aerococcus and, Aerococcus species, Aerococcus spp, Aerococcus urinae, Aerococcus viridans","Aerococcus species, Aerococcus spp, Aerococcus urinae, Aerococcus urinaeequi, Aerococcus viridans",,"Aerococcus viridans, Aerococcus were","soil, human gut, animal host",general infection,Yes,Yes,"Aerococcus sp, Aerococcus spp, Aerococcus viridans",Bacteria Firmicutes Bacilli Lactobacillales Aerococcaceae Aerococcus
+Otu125355,Bacteria,Actinobacteriota,Actinobacteria,Propionibacteriales,Nocardioidaceae,Aeromicrobium,Unknown,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Unknown,,,"Aeromicrobium marinum, Aeromicrobium sp","Aeromicrobium camelliae, Aeromicrobium marinum, Aeromicrobium sp, Aeromicrobium species, Aeromicrobium tamlense, Aeromicrobium were","Aeromicrobium alkaliterrae, Aeromicrobium and, Aeromicrobium chenweiae, Aeromicrobium fastidiosum, Aeromicrobium panaciterrae, Aeromicrobium sp, Aeromicrobium stalagmiti, Aeromicrobium terrae",,,"soil, marine, human gut, animal host",general infection,Yes,Yes,Aeromicrobium sp,Bacteria Actinobacteriota Actinobacteria Propionibacteriales Nocardioidaceae Aeromicrobium
+Otu136556,Bacteria,Proteobacteria,Gammaproteobacteria,Enterobacterales,Aeromonadaceae,Aeromonas,Yes,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,,"Aeromonas dhakensis, Aeromonas hydrophila","Aeromonas hydrophila, Aeromonas sobria","Aeromonas hydrophila, Aeromonas media, Aeromonas sobria, Aeromonas spp",,"Aeromonas and, Aeromonas in, Aeromonas sp, Aeromonas spp, Aeromonas were","freshwater, marine, human gut, animal host",general infection,Yes,Yes,"Aeromonas caviae, Aeromonas hydrophila, Aeromonas jandaei, Aeromonas sobria, Aeromonas species, Aeromonas spp, Aeromonas veronii",Bacteria Proteobacteria Gammaproteobacteria Enterobacterales Aeromonadaceae Aeromonas
+
+  `;
+
+  let data = parseCSV(csvText);
+
+  function parseCSV(csv) {
+    const rows = csv.trim().split('\n').map(r => r.split(','));
+    const headers = rows[0];
+    return rows.slice(1).map(row => {
+      let obj = {};
+      headers.forEach((h, i) => obj[h] = row[i] || "");
+      return obj;
+    });
+  }
 
   document.getElementById('csvFileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -150,32 +193,55 @@ document.getElementById("defaultOpen").click();
   }
 
   function searchCSV() {
-    const query = document.getElementById("searchBox").value.trim().toLowerCase();
-    const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "";
+  const query = document.getElementById("searchBox").value.trim().toLowerCase();
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "";
 
-    if (!query) {
-      resultsDiv.innerHTML = "<p>Please enter a search term.</p>";
-      return;
-    }
-
-    const matches = data.filter(row =>
-      row["OTU"].toLowerCase() === query ||
-      row["Full_Name"].toLowerCase() === query
-    );
-
-    if (matches.length === 0) {
-      resultsDiv.innerHTML = "<p>No match found.</p>";
-      return;
-    }
-
-    // Create table
-    const headers = Object.keys(data[0]);
-    let table = "<table border='1' cellpadding='5' cellspacing='0'><tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-    matches.forEach(row => {
-      table += "<tr>" + headers.map(h => `<td>${row[h]}</td>`).join("") + "</tr>";
-    });
-    table += "</table>";
-    resultsDiv.innerHTML = table;
+  if (!query) {
+    resultsDiv.innerHTML = "<p>Please enter a search term.</p>";
+    return;
   }
+
+  const match = data.find(row =>
+    row["OTU"].toLowerCase() === query ||
+    row["Full_Name"].toLowerCase() === query
+  );
+
+  if (!match) {
+    resultsDiv.innerHTML = "<p>No match found.</p>";
+    return;
+  }
+
+  // Build output dynamically
+  let output = "<table border='1' cellpadding='5' cellspacing='0'>";
+
+  // If search was OTU → show Full_Name first
+  if (match["OTU"].toLowerCase() === query) {
+    output += `<tr><th>Full Name</th><td>${match["Full_Name"]}</td></tr>`;
+  } 
+  // If search was Full_Name → show OTU first
+  else {
+    output += `<tr><th>OTU</th><td>${match["OTU"]}</td></tr>`;
+  }
+
+  // Excluded columns
+  const excludeCols = ["OTU", "Full_Name", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus"];
+
+  // Show all other non-empty, non-"Unknown" fields
+  for (const [key, value] of Object.entries(match)) {
+    if (
+      value &&
+      value.trim() !== "" &&
+      !value.toLowerCase().includes("unknown") &&
+      !excludeCols.includes(key)
+    ) {
+      output += `<tr><th>${key}</th><td>${value}</td></tr>`;
+    }
+  }
+
+  output += "</table>";
+  resultsDiv.innerHTML = output;
+}
+
+
 </script>
