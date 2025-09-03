@@ -3,17 +3,24 @@ from Bio import Entrez
 import re
 import time
 
+#example email works fine, keep as is
 Entrez.email = "your_email@example.com"
-INPUT_CSV = "shortened.csv"
-OUTPUT_CSV = "enriched_OTUs_short.csv"
+#spreadsheet you want to look at
+INPUT_CSV = "output.csv"
+#output spreadsheet
+OUTPUT_CSV = "enriched_OTUs.csv"
 DELAY = 0.4
-MAX_ABSTRACTS = 5
+
+#number of abstracts you want the computer to look through 
+MAX_ABSTRACTS = 20
 
 df = pd.read_csv(INPUT_CSV)
 
+#If the computer can't find relevant info, it will fill the cell with 'unknown'
 def fill_default(value, default="Unknown"):
     return value if pd.notna(value) and str(value).strip() else default
 
+#computer will search through PubMed abstracts
 def search_pubmed(genus, keywords):
     """Fetch abstracts mentioning genus + keywords"""
     try:
@@ -44,7 +51,7 @@ def extract_keywords(text, keyword_dict):
             found.append(label)
     return ", ".join(found)
 
-# Fill blanks with "Unknown"
+#these are the columns you want the computer to fill
 columns_to_fill = [
     "Pathogenic Species/Strains in Genus?",
     "Culturable?",
@@ -87,7 +94,7 @@ disease_keywords = {
     "general infection": r"\binfection\b"
 }
 
-# New enrichment columns
+# New spreadsheet columns
 df["Pathogenic Species"] = ""
 df["Antimicrobial Resistant Species"] = ""
 df["Culturable Species"] = ""
@@ -96,11 +103,11 @@ df["Endosymbiont Species"] = ""
 df["Environmental Sources"] = ""
 df["Human Disease Impact"] = ""
 
-# Main loop
+#Loops through each row
 for idx, row in df.iterrows():
     genus = row["Genus"]
 
-    # Enrich each property
+    # Looks PubMed for genus 
     for prop, kw in property_keywords.items():
         text = search_pubmed(genus, kw)
         species_list = extract_species(genus, text)
@@ -118,6 +125,6 @@ for idx, row in df.iterrows():
     dis_hits = extract_keywords(text_dis, disease_keywords)
     df.at[idx, "Human Disease Impact"] = dis_hits if dis_hits else "None"
 
-# Save enriched CSV
+# Save to new spreadsheet
 df.to_csv(OUTPUT_CSV, index=False)
 print(f"CSV with environmental and disease associations saved as {OUTPUT_CSV}")
