@@ -2,56 +2,57 @@ import pandas as pd
 from Bio import Entrez
 import re
 import time
+from tqdm import tqdm  # <-- progress bar
 
-#example email works fine, keep as is
+# Example email works fine, keep as is
 Entrez.email = "your_email@example.com"
-#spreadsheet you want to look at
+
+# Spreadsheet input/output
 INPUT_CSV = "output.csv"
-#output spreadsheet
 OUTPUT_CSV = "enriched_OTUs.csv"
 DELAY = 0.4
 
-#number of abstracts you want the computer to look through 
-MAX_ABSTRACTS = 20
+# Number of abstracts to look through
+MAX_ABSTRACTS = 5
 
 df = pd.read_csv(INPUT_CSV)
 
-#If the computer can't find relevant info, it will fill the cell with 'unknown'
+# If missing info, fill with "Unknown"
 def fill_default(value, default="Unknown"):
     return value if pd.notna(value) and str(value).strip() else default
 
-#computer will search through PubMed abstracts
+# PubMed search function (now returns abstracts + PMIDs)
 def search_pubmed(genus, keywords):
-    """Fetch abstracts mentioning genus + keywords"""
+    """Fetch abstracts + PMIDs mentioning genus + keywords"""
     try:
         handle = Entrez.esearch(db="pubmed", term=f"{genus}[Organism] AND ({keywords})", retmax=MAX_ABSTRACTS)
         record = Entrez.read(handle)
         handle.close()
         pmids = record["IdList"]
         if not pmids:
-            return ""
+            return "", []
         handle2 = Entrez.efetch(db="pubmed", id=pmids, rettype="abstract", retmode="text")
         abstracts_text = handle2.read()
         handle2.close()
         time.sleep(DELAY)
-        return abstracts_text
+        return abstracts_text, pmids
     except:
-        return ""
+        return "", []
 
+# Extract species names (binomials)
 def extract_species(genus, text):
-    """Extract species names (binomials) from text"""
     matches = re.findall(rf'\b{genus} [a-z]+', text)
     return ", ".join(sorted(set(matches)))
 
+# Extract relevant keywords
 def extract_keywords(text, keyword_dict):
-    """Extract relevant keywords from abstracts"""
     found = []
     for label, pattern in keyword_dict.items():
         if re.search(pattern, text, flags=re.IGNORECASE):
             found.append(label)
     return ", ".join(found)
 
-#these are the columns you want the computer to fill
+# Fill default columns
 columns_to_fill = [
     "Pathogenic Species/Strains in Genus?",
     "Culturable?",
@@ -102,29 +103,40 @@ df["Plant Pathogenic Species"] = ""
 df["Endosymbiont Species"] = ""
 df["Environmental Sources"] = ""
 df["Human Disease Impact"] = ""
+df["sources"] = ""   # <-- new sources column
 
-#Loops through each row
-for idx, row in df.iterrows():
+# Main loop with progress bar
+for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing genera"):
     genus = row["Genus"]
+    all_pmids = set()  # collect all PubMed IDs for this genus
 
-    # Looks PubMed for genus 
+    # Search for property keywords
     for prop, kw in property_keywords.items():
-        text = search_pubmed(genus, kw)
+        text, pmids = search_pubmed(genus, kw)
+        all_pmids.update(pmids)
         species_list = extract_species(genus, text)
         if species_list:
             df.at[idx, f"{prop} Species"] = species_list
             df.at[idx, f"{prop}?"] = "Yes"
 
     # Environmental associations
-    text_env = search_pubmed(genus, "environment OR soil OR water OR gut OR rhizosphere")
+    text_env, pmids_env = search_pubmed(genus, "environment OR soil OR water OR gut OR rhizosphere")
+    all_pmids.update(pmids_env)
     env_hits = extract_keywords(text_env, environment_keywords)
     df.at[idx, "Environmental Sources"] = env_hits if env_hits else "Unknown"
 
     # Human disease associations
-    text_dis = search_pubmed(genus, "disease OR infection OR pathogenic")
+    text_dis, pmids_dis = search_pubmed(genus, "disease OR infection OR pathogenic")
+    all_pmids.update(pmids_dis)
     dis_hits = extract_keywords(text_dis, disease_keywords)
     df.at[idx, "Human Disease Impact"] = dis_hits if dis_hits else "None"
 
+    # Save sources (as PubMed URLs for readability)
+    if all_pmids:
+        df.at[idx, "sources"] = "; ".join([f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" for pmid in all_pmids])
+    else:
+        df.at[idx, "sources"] = "None"
+
 # Save to new spreadsheet
 df.to_csv(OUTPUT_CSV, index=False)
-print(f"CSV with environmental and disease associations saved as {OUTPUT_CSV}")
+print(f"CSV with environmental, disease associations, and sources saved as {OUTPUT_CSV}")
