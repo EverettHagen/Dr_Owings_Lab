@@ -24,12 +24,14 @@ header {
   gap: 1rem;
   margin: 1rem;
 }
-.search-container input[type="text"] {
+.search-container input[type="text"], .search-container select {
   padding: 0.5rem;
   font-size: 1rem;
-  width: 300px;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+.search-container input[type="text"] {
+  width: 300px;
 }
 .accordion-section {
   margin: 0.5rem auto;
@@ -106,13 +108,19 @@ header {
 
 <div class="search-container">
   <input type="text" id="search" placeholder="Search taxonomy or specimens..." aria-label="Search">
+
+
+  <select id="pathogen-filter">
+    <option value="">All</option>
+    <option value="yes">Pathogenic</option>
+    <option value="no">Non-pathogenic</option>
+  </select>
 </div>
 
 <main id="accordion-container" class="accordion-section"></main>
 
 <script>
-// --- Embedded CSV ---
-//#region CSV Data
+
 const csvText = `OTU,Kingdom,Phylum,Class,Order,Family,Genus,Pathogenic Species/Strains in Genus?,Culturable?,Environmental Associations,Genus Contains Antimicrobial Resistant Strains?,Associated with Food-borne Illness?,Disease Associations,Plant Pathogen?,Endosymbiont?,Sources,Pathogenic Species,Antimicrobial Resistant Species,Culturable Species,Plant Pathogenic Species,Endosymbiont Species,Environmental Sources,Human Disease Impact,sources,Pathogenic?,Antimicrobial Resistant?,Plant Pathogen Species,Full_Name
 Otu000581,Bacteria,Bdellovibrionota,Oligoflexia,0319-6G20,0319-6G20_fa,0319-6G20_ge,No,Sometimes,"Environmentally derived bacteria, typically found in soils, ice, human skin, etc.",No,No,Unknown,No,No,"Nakai, R., Fujisawa, T., Nakamura, Y. et al. Genome sequence and overview of Oligoflexus tunisiensis Shr3T in the eighth class Oligoflexia of the phylum Proteobacteria . Stand in Genomic Sci 11, 90 (2016). https://doi.org/10.1186/s40793-016-0210-6 https://environmentalmicrobiome.biomedcentral.com/articles/10.1186/s40793-016-0210-6#citeas ;",,,,,,Unknown,,,,,,Bacteria Bdellovibrionota Oligoflexia 0319-6G20 0319-6G20_fa 0319-6G20_ge
 Otu001358,Bacteria,Acidobacteriota,Blastocatellia,2023-11-24 00:00:00,11-24_fa,11-24_ge,No,"Can be, just hasn't been yet","Associated with thermal environments like hot springs, mud pools, deep sea hydrothermal vents, and terrestrial fumaroles",No,No,Unknown,No,No,"Ruhl IA, Sheremet A, Furgason CC, Krause S, Bowers RM, Jarett JK, Tran TM, Grasby SE, Woyke T and Dunfield PF (2022) GAL08, an Uncultivated Group of Acidobacteria, Is a Dominant Bacterial Clade in a Neutral Hot Spring. Front. Microbiol. 12:787651. doi: 10.3389/fmicb.2021.787651 https://www.frontiersin.org/articles/10.3389/fmicb.2021.787651/full :",,,,,,"soil, marine, plant rhizosphere, animal host","pneumonia, general infection",https://pubmed.ncbi.nlm.nih.gov/39415115/; https://pubmed.ncbi.nlm.nih.gov/39857730/; https://pubmed.ncbi.nlm.nih.gov/40451072/; https://pubmed.ncbi.nlm.nih.gov/40784791/; https://pubmed.ncbi.nlm.nih.gov/38711928/; https://pubmed.ncbi.nlm.nih.gov/25765976/; https://pubmed.ncbi.nlm.nih.gov/24446556/; https://pubmed.ncbi.nlm.nih.gov/33947914/; https://pubmed.ncbi.nlm.nih.gov/36134610/; https://pubmed.ncbi.nlm.nih.gov/38147271/; https://pubmed.ncbi.nlm.nih.gov/38599826/; https://pubmed.ncbi.nlm.nih.gov/25371551/; https://pubmed.ncbi.nlm.nih.gov/38217646/; https://pubmed.ncbi.nlm.nih.gov/28466469/; https://pubmed.ncbi.nlm.nih.gov/39411542/; https://pubmed.ncbi.nlm.nih.gov/40591548/; https://pubmed.ncbi.nlm.nih.gov/40153322/; https://pubmed.ncbi.nlm.nih.gov/39918315/; https://pubmed.ncbi.nlm.nih.gov/40442827/; https://pubmed.ncbi.nlm.nih.gov/40795523/; https://pubmed.ncbi.nlm.nih.gov/39687138/; https://pubmed.ncbi.nlm.nih.gov/39505944/; https://pubmed.ncbi.nlm.nih.gov/31491553/; https://pubmed.ncbi.nlm.nih.gov/39819097/; https://pubmed.ncbi.nlm.nih.gov/39283830/; https://pubmed.ncbi.nlm.nih.gov/35486235/; https://pubmed.ncbi.nlm.nih.gov/40755463/; https://pubmed.ncbi.nlm.nih.gov/40639696/,,,,Bacteria Acidobacteriota Blastocatellia 2023-11-24 00:00:00 11-24_fa 11-24_ge
@@ -835,22 +843,27 @@ Otu079680,Bacteria,Proteobacteria,Gammaproteobacteria,Enterobacterales,Yersiniac
 Otu079731,Bacteria,Patescibacteria,Saccharimonadia,Saccharimonadales,YM_S32_TM7_50_20,YM_S32_TM7_50_20_ge,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,,,,Unknown,,,,,,Bacteria Patescibacteria Saccharimonadia Saccharimonadales YM_S32_TM7_50_20 YM_S32_TM7_50_20_ge
 Otu079761,Bacteria,Planctomycetota,Planctomycetes,Gemmatales,Gemmataceae,Zavarzinella,No,Yes,Unknown,Unknown,Unknown,Unknown,Unknown,Unknown,,,,Zavarzinella formosa,,,"soil, freshwater, marine, human gut",general infection,https://pubmed.ncbi.nlm.nih.gov/37536594/; https://pubmed.ncbi.nlm.nih.gov/39590719/; https://pubmed.ncbi.nlm.nih.gov/37148793/; https://pubmed.ncbi.nlm.nih.gov/35282274/; https://pubmed.ncbi.nlm.nih.gov/25780503/; https://pubmed.ncbi.nlm.nih.gov/29147807/,,,,Bacteria Planctomycetota Planctomycetes Gemmatales Gemmataceae Zavarzinella
 Otu079763,Bacteria,Proteobacteria,Gammaproteobacteria,Pseudomonadales,Halomonadaceae,Zymobacter,No,Yes,Unknown,Unknown,Unknown,Unknown,Unknown,Yes,,,,Zymobacter palmae,,"Zymobacter appeared, Zymobacter palmae","freshwater, human gut, animal host",general infection,https://pubmed.ncbi.nlm.nih.gov/23053081/; https://pubmed.ncbi.nlm.nih.gov/37289079/; https://pubmed.ncbi.nlm.nih.gov/23604558/; https://pubmed.ncbi.nlm.nih.gov/39824322/; https://pubmed.ncbi.nlm.nih.gov/36671302/; https://pubmed.ncbi.nlm.nih.gov/40731996/; https://pubmed.ncbi.nlm.nih.gov/32625027/; https://pubmed.ncbi.nlm.nih.gov/30836877/; https://pubmed.ncbi.nlm.nih.gov/25369873/; https://pubmed.ncbi.nlm.nih.gov/34324610/; https://pubmed.ncbi.nlm.nih.gov/33220680/; https://pubmed.ncbi.nlm.nih.gov/22160899/; https://pubmed.ncbi.nlm.nih.gov/35265049/; https://pubmed.ncbi.nlm.nih.gov/38068667/,,,,Bacteria Proteobacteria Gammaproteobacteria Pseudomonadales Halomonadaceae Zymobacter
-Otu079921,Bacteria,Proteobacteria,Alphaproteobacteria,Sphingomonadales,Sphingomonadaceae,Zymomonas,No,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,Zymomonas mobilis,"Zymomonas genera, Zymomonas mobilis",Zymomonas mobilis,,Zymomonas mobilis,animal host,,https://pubmed.ncbi.nlm.nih.gov/34073173/; https://pubmed.ncbi.nlm.nih.gov/16790937/; https://pubmed.ncbi.nlm.nih.gov/35432232/; https://pubmed.ncbi.nlm.nih.gov/38786179/; https://pubmed.ncbi.nlm.nih.gov/38004805/; https://pubmed.ncbi.nlm.nih.gov/37689952/; https://pubmed.ncbi.nlm.nih.gov/39871105/; https://pubmed.ncbi.nlm.nih.gov/33332762/; https://pubmed.ncbi.nlm.nih.gov/40207971/; https://pubmed.ncbi.nlm.nih.gov/39779298/; https://pubmed.ncbi.nlm.nih.gov/40697482/; https://pubmed.ncbi.nlm.nih.gov/36358131/; https://pubmed.ncbi.nlm.nih.gov/37127628/; https://pubmed.ncbi.nlm.nih.gov/39628717/; https://pubmed.ncbi.nlm.nih.gov/8785434/; https://pubmed.ncbi.nlm.nih.gov/34387025/; https://pubmed.ncbi.nlm.nih.gov/33166460/; https://pubmed.ncbi.nlm.nih.gov/35763700/; https://pubmed.ncbi.nlm.nih.gov/9726857/; https://pubmed.ncbi.nlm.nih.gov/10796014/; https://pubmed.ncbi.nlm.nih.gov/40243698/; https://pubmed.ncbi.nlm.nih.gov/40058650/; https://pubmed.ncbi.nlm.nih.gov/9201613/; https://pubmed.ncbi.nlm.nih.gov/40349795/; https://pubmed.ncbi.nlm.nih.gov/25369873/; https://pubmed.ncbi.nlm.nih.gov/38781192/; https://pubmed.ncbi.nlm.nih.gov/39281627/; https://pubmed.ncbi.nlm.nih.gov/40448650/,Yes,Yes,"Zymomonas and, Zymomonas could, Zymomonas mobilis",Bacteria Proteobacteria Alphaproteobacteria Sphingomonadales Sphingomonadaceae Zymomonas
-`;
-//#endregion
-// --- CSV Parser (handles quotes) ---
+Otu079921,Bacteria,Proteobacteria,Alphaproteobacteria,Sphingomonadales,Sphingomonadaceae,Zymomonas,No,Yes,Unknown,Unknown,Unknown,Unknown,Yes,Yes,,Zymomonas mobilis,"Zymomonas genera, Zymomonas mobilis",Zymomonas mobilis,,Zymomonas mobilis,animal host,,https://pubmed.ncbi.nlm.nih.gov/34073173/; https://pubmed.ncbi.nlm.nih.gov/16790937/; https://pubmed.ncbi.nlm.nih.gov/35432232/; https://pubmed.ncbi.nlm.nih.gov/38786179/; https://pubmed.ncbi.nlm.nih.gov/38004805/; https://pubmed.ncbi.nlm.nih.gov/37689952/; https://pubmed.ncbi.nlm.nih.gov/39871105/; https://pubmed.ncbi.nlm.nih.gov/33332762/; https://pubmed.ncbi.nlm.nih.gov/40207971/; https://pubmed.ncbi.nlm.nih.gov/39779298/; https://pubmed.ncbi.nlm.nih.gov/40697482/; https://pubmed.ncbi.nlm.nih.gov/36358131/; https://pubmed.ncbi.nlm.nih.gov/37127628/; https://pubmed.ncbi.nlm.nih.gov/39628717/; https://pubmed.ncbi.nlm.nih.gov/8785434/; https://pubmed.ncbi.nlm.nih.gov/34387025/; https://pubmed.ncbi.nlm.nih.gov/33166460/; https://pubmed.ncbi.nlm.nih.gov/35763700/; https://pubmed.ncbi.nlm.nih.gov/9726857/; https://pubmed.ncbi.nlm.nih.gov/10796014/; https://pubmed.ncbi.nlm.nih.gov/40243698/; https://pubmed.ncbi.nlm.nih.gov/40058650/; https://pubmed.ncbi.nlm.nih.gov/9201613/; https://pubmed.ncbi.nlm.nih.gov/40349795/; https://pubmed.ncbi.nlm.nih.gov/25369873/; https://pubmed.ncbi.nlm.nih.gov/38781192/; https://pubmed.ncbi.nlm.nih.gov/39281627/; https://pubmed.ncbi.nlm.nih.gov/40448650/,Yes,Yes,"Zymomonas and, Zymomonas could, Zymomonas mobilis",Bacteria Proteobacteria Alphaproteobacteria Sphingomonadales Sphingomonadaceae Zymomonas`
+;
+
+// --- CSV Parser ---
 function parseCSV(text) {
   const rows = [];
   const lines = text.split(/\r?\n/);
   for (const line of lines) {
+    if (!line.trim()) continue;
     const fields = [];
     let field = '';
     let inQuotes = false;
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
       if (char === '"') {
-        if (inQuotes && line[i+1] === '"') { field+='"'; i++; } else { inQuotes = !inQuotes; }
-      } else if (char === ',' && !inQuotes) { fields.push(field); field=''; } else { field+=char; }
+        if (inQuotes && line[i+1] === '"') { field+='"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (char === ',' && !inQuotes) {
+        fields.push(field);
+        field = '';
+      } else { field += char; }
     }
     fields.push(field);
     rows.push(fields);
@@ -858,121 +871,124 @@ function parseCSV(text) {
   const headers = rows[0];
   return rows.slice(1).map(row => {
     const obj = {};
-    headers.forEach((h, idx) => { obj[h.trim()] = row[idx]?.trim() || ''; });
+    headers.forEach((h, idx) => obj[h.trim()] = row[idx]?.trim() || '');
     return obj;
   });
 }
 
-// --- Accordion Utilities ---
+// --- Accordion Header Generator ---
 function createAccordionHeader(text) {
   const header = document.createElement('div');
+  const content = document.createElement('div');
   header.className = 'accordion-header';
-  header.setAttribute('role','button');
-  header.setAttribute('tabindex','0');
+  content.className = 'accordion-content';
   header.setAttribute('aria-expanded','false');
   header.textContent = text;
 
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-
-  header.addEventListener('click',()=>{
-    const expanded = header.getAttribute('aria-expanded')==='true';
+  header.addEventListener('click', () => {
+    const expanded = header.getAttribute('aria-expanded') === 'true';
     const siblings = header.parentElement.querySelectorAll('.accordion-header');
-    siblings.forEach(sib=>{ sib.setAttribute('aria-expanded','false'); sib.nextElementSibling.classList.remove('active'); });
-    if(!expanded){ header.setAttribute('aria-expanded','true'); content.classList.add('active'); }
+    siblings.forEach(sib => {
+      sib.setAttribute('aria-expanded','false');
+      sib.nextElementSibling.classList.remove('active');
+    });
+    if (!expanded) { header.setAttribute('aria-expanded','true'); content.classList.add('active'); }
   });
-  header.addEventListener('keypress', e=>{ if(e.key==='Enter'||e.key===' ') header.click(); });
+
   return { header, content };
 }
 
-// --- Render Accordion ---
-function renderAccordion(searchTerm='') {
+// --- Render ---
+function renderAccordion(searchTerm='', filter='') {
   const container = document.getElementById('accordion-container');
-  container.innerHTML='';
+  container.innerHTML = '';
   const search = searchTerm.toLowerCase();
 
-  for(const phylum in data){
-    if(search && !phylum.toLowerCase().includes(search) &&
-       !Object.keys(data[phylum]).some(cls =>
-         cls.toLowerCase().includes(search) ||
-         Object.keys(data[phylum][cls]).some(ord =>
-           ord.toLowerCase().includes(search) ||
-           data[phylum][cls][ord].some(item=>item.title.toLowerCase().includes(search))
-         )
-       )) continue;
+  for (const phylum in data) {
+    const {header: phylumHeader, content: phylumContent} = createAccordionHeader(phylum);
 
-    const {header: phylumHeader, content: phylumContent}=createAccordionHeader(phylum);
+    for (const cls in data[phylum]) {
+      const {header: classHeader, content: classContent} = createAccordionHeader(cls);
 
-    for(const cls in data[phylum]){
-      const {header: classHeader, content: classContent}=createAccordionHeader(cls);
+      for (const ord in data[phylum][cls]) {
+        const {header: orderHeader, content: orderContent} = createAccordionHeader(ord);
+        const grid = document.createElement('div');
+        grid.className = 'card-grid';
 
-      for(const ord in data[phylum][cls]){
-        const {header: orderHeader, content: orderContent}=createAccordionHeader(ord);
+        data[phylum][cls][ord].forEach(item => {
 
-        const grid=document.createElement('div');
-        grid.className='card-grid';
+  
+          if (search && !item.title.toLowerCase().includes(search)) return;
 
-        data[phylum][cls][ord].forEach(item=>{
-          if(search && !item.title.toLowerCase().includes(search)) return;
+          const hasPathogen = item['Pathogenic Species'] && item['Pathogenic Species'].trim() !== '';
+          if (filter === 'yes' && !hasPathogen) return;
+          if (filter === 'no' && hasPathogen) return;
 
-          const card=document.createElement('div');
-          card.className='card';
-          let html=`<h3>${item.title}</h3>`;
-          html+=`<div class="otu">OTU: ${item.OTU}</div>`;
+          const card = document.createElement('div');
+          card.className = 'card';
+          let html = `<h3>${item.title}</h3>`;
+          html += `<div class="otu">OTU: ${item.OTU}</div>`;
           if(item['Pathogenic Species']) html+=`<p>Pathogenic Species: ${item['Pathogenic Species']}</p>`;
           if(item['Culturable Species']) html+=`<p>Culturable Species: ${item['Culturable Species']}</p>`;
           if(item['Environmental Sources']) html+=`<p>Environmental Sources: ${item['Environmental Sources']}</p>`;
           if(item['Human Disease Impact']) html+=`<p>Human Disease Impact: ${item['Human Disease Impact']}</p>`;
           if(item['Endosymbiont Species']) html+=`<p>Endosymbiont Species: ${item['Endosymbiont Species']}</p>`;
-          if(item['sources']){
-            const sources=item['sources'].split(',').map(s=>s.trim()).filter(s=>s);
-            if(sources.length) html+=`<div class="sources"><strong>Sources:</strong><br>${sources.join('<br>')}</div>`;
-          }
-          card.innerHTML=html;
+          card.innerHTML = html;
           grid.appendChild(card);
         });
 
-        if(grid.children.length>0){ orderContent.appendChild(grid); classContent.appendChild(orderHeader); classContent.appendChild(orderContent); }
+        if (grid.children.length > 0) {
+          orderContent.appendChild(grid);
+          classContent.appendChild(orderHeader);
+          classContent.appendChild(orderContent);
+        }
       }
-
-      if(classContent.children.length>0){ phylumContent.appendChild(classHeader); phylumContent.appendChild(classContent); }
+      if (classContent.children.length > 0) {
+        phylumContent.appendChild(classHeader);
+        phylumContent.appendChild(classContent);
+      }
     }
-
-    if(phylumContent.children.length>0){ container.appendChild(phylumHeader); container.appendChild(phylumContent); }
+    if (phylumContent.children.length > 0) {
+      container.appendChild(phylumHeader);
+      container.appendChild(phylumContent);
+    }
   }
 }
 
-// --- Process CSV ---
-const rows=parseCSV(csvText);
-data={};
-rows.forEach(obj=>{
-  const phylum=obj.Phylum?.trim(); if(!phylum) return;
-  const cls=obj.Class?.trim(); if(!cls) return;
-  const ord=obj.Order?.trim(); if(!ord) return;
+// --- Build Data from CSV ---
+const rows = parseCSV(csvText);
+const data = {};
+rows.forEach(obj => {
+  const phylum = obj.Phylum, cls = obj.Class, ord = obj.Order;
+  if (!phylum || !cls || !ord) return;
+  if (!data[phylum]) data[phylum]={};
+  if (!data[phylum][cls]) data[phylum][cls]={};
+  if (!data[phylum][cls][ord]) data[phylum][cls][ord]=[];
 
-  if(!data[phylum]) data[phylum]={};
-  if(!data[phylum][cls]) data[phylum][cls]={};
-  if(!data[phylum][cls][ord]) data[phylum][cls][ord]=[];
-
-  const cardData={
+  data[phylum][cls][ord].push({
     title: obj['Full_Name'] || obj['Genus'] || obj['OTU'],
     OTU: obj['OTU'] || 'Unknown',
     'Pathogenic Species': obj['Pathogenic Species'] || '',
     'Culturable Species': obj['Culturable Species'] || '',
     'Environmental Sources': obj['Environmental Sources'] || '',
     'Human Disease Impact': obj['Human Disease Impact'] || '',
-    'Endosymbiont Species': obj['Endosymbiont Species'] || '',
-    'sources': obj['sources'] || ''
-  };
-  data[phylum][cls][ord].push(cardData);
+    'Endosymbiont Species': obj['Endosymbiont Species'] || ''
+  });
 });
 
-// --- Initial Render ---
+// --- Filters ---
+const searchInput = document.getElementById('search');
+const filterSelect = document.getElementById('pathogen-filter');
+
+function updateFilters() {
+  renderAccordion(searchInput.value, filterSelect.value);
+}
+
+searchInput.addEventListener('input', updateFilters);
+filterSelect.addEventListener('change', updateFilters);
+
+// Initial Load
 renderAccordion();
-
-// --- Live Search ---
-document.getElementById('search').addEventListener('input', e=>{ renderAccordion(e.target.value); });
-
 </script>
 
 </body>
